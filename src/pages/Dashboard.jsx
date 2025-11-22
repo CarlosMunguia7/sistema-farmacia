@@ -43,7 +43,7 @@ const colorClasses = {
     violet: 'from-violet-500 to-violet-600 shadow-violet-500/30',
 };
 
-export default function Dashboard() {
+export default function Dashboard({ onNavigate }) {
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -66,8 +66,8 @@ export default function Dashboard() {
                                     <p className="text-sm font-medium text-slate-600">{stat.name}</p>
                                     <p className="text-3xl font-bold text-slate-800 mt-2">{stat.value}</p>
                                     <p className={`text-sm mt-2 ${stat.changeType === 'positive' ? 'text-green-600' :
-                                            stat.changeType === 'negative' ? 'text-red-600' :
-                                                'text-slate-500'
+                                        stat.changeType === 'negative' ? 'text-red-600' :
+                                            'text-slate-500'
                                         }`}>
                                         {stat.change}
                                     </p>
@@ -85,13 +85,22 @@ export default function Dashboard() {
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 shadow-xl">
                 <h3 className="text-xl font-bold text-slate-800 mb-4">Acciones Rápidas</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button className="p-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 hover:-translate-y-0.5">
+                    <button
+                        onClick={() => onNavigate('ventas')}
+                        className="p-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 hover:-translate-y-0.5"
+                    >
                         Nueva Venta
                     </button>
-                    <button className="p-4 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all duration-200 hover:-translate-y-0.5">
+                    <button
+                        onClick={() => onNavigate('inventario')}
+                        className="p-4 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all duration-200 hover:-translate-y-0.5"
+                    >
                         Agregar Producto
                     </button>
-                    <button className="p-4 rounded-xl bg-gradient-to-r from-violet-500 to-violet-600 text-white font-medium hover:shadow-lg hover:shadow-violet-500/30 transition-all duration-200 hover:-translate-y-0.5">
+                    <button
+                        onClick={() => onNavigate('reportes')}
+                        className="p-4 rounded-xl bg-gradient-to-r from-violet-500 to-violet-600 text-white font-medium hover:shadow-lg hover:shadow-violet-500/30 transition-all duration-200 hover:-translate-y-0.5"
+                    >
                         Ver Reportes
                     </button>
                 </div>

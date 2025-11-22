@@ -5,9 +5,10 @@ const STORAGE_KEYS = {
     PRODUCTS: 'farmacia_products',
     SALES: 'farmacia_sales',
     SETTINGS: 'farmacia_settings',
+    CLIENTS: 'farmacia_clients',
 };
 
-// Productos
+// ---------- Productos ----------
 export const getProducts = () => {
     const data = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
     return data ? JSON.parse(data) : [];
@@ -47,7 +48,7 @@ export const deleteProduct = (id) => {
     return filtered;
 };
 
-// Ventas
+// ---------- Ventas ----------
 export const getSales = () => {
     const data = localStorage.getItem(STORAGE_KEYS.SALES);
     return data ? JSON.parse(data) : [];
@@ -57,6 +58,11 @@ export const saveSales = (sales) => {
     localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(sales));
 };
 
+/**
+ * addSale
+ *  - Guarda la venta en el historial
+ *  - Reduce el stock de los productos vendidos
+ */
 export const addSale = (sale) => {
     const sales = getSales();
     const newSale = {
@@ -66,10 +72,21 @@ export const addSale = (sale) => {
     };
     sales.push(newSale);
     saveSales(sales);
+
+    // ---- Descontar stock ----
+    const products = getProducts();
+    newSale.items.forEach(item => {
+        const prod = products.find(p => p.name === item.name);
+        if (prod) {
+            prod.stock = Math.max(0, (prod.stock || 0) - item.quantity);
+        }
+    });
+    saveProducts(products);
+
     return newSale;
 };
 
-// Inicializar con datos de ejemplo de productos
+// ---------- Inicialización de datos ----------
 export const initializeSampleData = () => {
     const products = getProducts();
     if (products.length === 0) {
@@ -139,7 +156,6 @@ export const initializeSampleData = () => {
     }
 };
 
-// Inicializar con datos de ejemplo de ventas
 export const initializeSampleSales = () => {
     const sales = getSales();
     if (sales.length === 0) {
@@ -176,7 +192,7 @@ export const initializeSampleSales = () => {
     }
 };
 
-// Caja Diaria
+// ---------- Caja Diaria ----------
 export const getCashRegister = () => {
     const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     const settings = data ? JSON.parse(data) : {};
@@ -217,4 +233,97 @@ export const deleteExpense = (id) => {
     const cashRegister = getCashRegister();
     cashRegister.expenses = cashRegister.expenses.filter(e => e.id !== id);
     saveCashRegister(cashRegister);
+};
+
+// ---------- Clientes ----------
+export const getClients = () => {
+    const data = localStorage.getItem(STORAGE_KEYS.CLIENTS);
+    return data ? JSON.parse(data) : [];
+};
+
+export const saveClients = (clients) => {
+    localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(clients));
+};
+
+export const addClient = (client) => {
+    const clients = getClients();
+    const newClient = {
+        ...client,
+        id: Date.now().toString(),
+        balance: 0,
+        payments: [],
+        createdAt: new Date().toISOString(),
+    };
+    clients.push(newClient);
+    saveClients(clients);
+    return newClient;
+};
+
+export const updateClient = (id, updatedData) => {
+    const clients = getClients();
+    const index = clients.findIndex(c => c.id === id);
+    if (index !== -1) {
+        clients[index] = { ...clients[index], ...updatedData, updatedAt: new Date().toISOString() };
+        saveClients(clients);
+        return clients[index];
+    }
+    return null;
+};
+
+export const deleteClient = (id) => {
+    const clients = getClients();
+    const filtered = clients.filter(c => c.id !== id);
+    saveClients(filtered);
+    return filtered;
+};
+
+export const addPayment = (clientId, payment) => {
+    const clients = getClients();
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+        if (!client.payments) client.payments = [];
+        const newPayment = {
+            ...payment,
+            id: Date.now().toString(),
+            createdAt: new Date().toISOString(),
+        };
+        client.payments.push(newPayment);
+        client.balance = (client.balance || 0) - payment.amount;
+        saveClients(clients);
+        return newPayment;
+    }
+    return null;
+};
+
+export const addCreditSale = (clientId, saleAmount) => {
+    const clients = getClients();
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+        client.balance = (client.balance || 0) + saleAmount;
+        saveClients(clients);
+        return client;
+    }
+    return null;
+};
+
+// ---------- Alertas de vencimiento ----------
+/**
+ * getExpiringProducts
+ * @param {number} days - número de días a partir de hoy
+ * @returns {Array} lista de productos que vencen dentro del rango
+ */
+export const getExpiringProducts = (days = 30) => {
+    const products = getProducts();
+    const now = new Date();
+    const limit = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    return products.filter(p => {
+        const exp = new Date(p.expiryDate);
+        return exp >= now && exp <= limit;
+    });
+};
+
+// ---------- Inicialización general ----------
+export const initializeApp = () => {
+    initializeSampleData();
+    initializeSampleSales();
 };
