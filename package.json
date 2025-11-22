@@ -45,4 +45,27 @@
     "vite": "^7.2.4",
     "wait-on": "^9.0.3"
   }
+  },
+  "build": {
+    "appId": "com.farmacontrol.app",
+    "productName": "FarmaControl",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/vite.svg"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
 }
