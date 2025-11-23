@@ -322,8 +322,105 @@ export const getExpiringProducts = (days = 30) => {
     });
 };
 
+// ---------- Usuarios y Autenticación ----------
+export const getUsers = () => {
+    const data = localStorage.getItem('farmacia_users');
+    return data ? JSON.parse(data) : [];
+};
+
+export const saveUsers = (users) => {
+    localStorage.setItem('farmacia_users', JSON.stringify(users));
+};
+
+export const initializeUsers = () => {
+    const users = getUsers();
+    if (users.length === 0) {
+        const defaultAdmin = {
+            id: '1',
+            username: 'admin',
+            password: '123', // En producción idealmente se usaría hash
+            name: 'Administrador',
+            role: 'admin',
+            createdAt: new Date().toISOString()
+        };
+        saveUsers([defaultAdmin]);
+    }
+};
+
+export const validateLogin = (username, password) => {
+    const users = getUsers();
+    const user = users.find(u => u.username === username && u.password === password);
+    return user || null;
+};
+
+export const addUser = (user) => {
+    const users = getUsers();
+    // Validar que el username no exista
+    if (users.some(u => u.username === user.username)) {
+        throw new Error('El nombre de usuario ya existe');
+    }
+    const newUser = {
+        ...user,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
+    };
+    users.push(newUser);
+    saveUsers(users);
+    return newUser;
+};
+
+export const deleteUser = (id) => {
+    const users = getUsers();
+    // Evitar borrar al último admin o al usuario actual (esto se maneja mejor en UI, pero aquí protegemos al admin principal si es necesario)
+    const filtered = users.filter(u => u.id !== id);
+    saveUsers(filtered);
+    return filtered;
+};
+
+// ---------- Respaldo y Restauración ----------
+export const createBackup = () => {
+    const backup = {
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+        data: {
+            products: getProducts(),
+            sales: getSales(),
+            settings: getCashRegister(), // Ajustado para guardar settings completos si fuera necesario
+            clients: getClients(),
+            users: getUsers(),
+        }
+    };
+    return JSON.stringify(backup, null, 2);
+};
+
+export const restoreBackup = (jsonString) => {
+    try {
+        const backup = JSON.parse(jsonString);
+        if (!backup.data) throw new Error('Formato de archivo inválido');
+
+        // Restaurar datos
+        if (backup.data.products) saveProducts(backup.data.products);
+        if (backup.data.sales) saveSales(backup.data.sales);
+
+        // Restaurar settings/caja
+        if (backup.data.settings) {
+            const settings = { cashRegister: backup.data.settings };
+            localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+        }
+
+        if (backup.data.clients) saveClients(backup.data.clients);
+        if (backup.data.users) saveUsers(backup.data.users);
+
+        return true;
+    } catch (error) {
+        console.error('Error al restaurar:', error);
+        throw new Error('No se pudo restaurar el archivo. Asegúrate de que sea un respaldo válido.');
+    }
+};
+
 // ---------- Inicialización general ----------
 export const initializeApp = () => {
     initializeSampleData();
     initializeSampleSales();
+    initializeUsers();
 };

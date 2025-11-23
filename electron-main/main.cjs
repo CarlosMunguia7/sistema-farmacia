@@ -16,7 +16,7 @@ function createWindow() {
         },
         autoHideMenuBar: true,
         backgroundColor: '#f8fafc',
-        title: 'Sistema de Inventario Farmacia',
+        title: 'Farmacia La Esperanza',
     });
 
     if (isDev) {

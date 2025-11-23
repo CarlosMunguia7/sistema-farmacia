@@ -44,11 +44,10 @@
     "tailwindcss": "^3.4.18",
     "vite": "^7.2.4",
     "wait-on": "^9.0.3"
-  }
   },
   "build": {
-    "appId": "com.farmacontrol.app",
-    "productName": "FarmaControl",
+    "appId": "com.farmacialaesperanza.app",
+    "productName": "Farmacia La Esperanza",
     "directories": {
       "output": "release"
     },
@@ -58,8 +57,7 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "public/vite.svg"
+      "target": "nsis"
     },
     "nsis": {
       "oneClick": false,

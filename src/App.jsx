@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Inventario from './pages/Inventario';
 import Reportes from './pages/Reportes';
 import Ventas from './pages/Ventas';
 import Clientes from './pages/Clientes';
+import Usuarios from './pages/Usuarios';
+import Login from './pages/Login';
+import { initializeApp } from './lib/storage';
 
 function App() {
+  const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
+
+  useEffect(() => {
+    initializeApp();
+    // Check for existing session (optional, for now we require login on refresh for security)
+    // const savedUser = localStorage.getItem('farmacia_session');
+    // if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    // localStorage.setItem('farmacia_session', JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentPage('dashboard');
+    // localStorage.removeItem('farmacia_session');
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -20,10 +43,16 @@ function App() {
         return <Clientes />;
       case 'reportes':
         return <Reportes />;
+      case 'usuarios':
+        return <Usuarios />;
       default:
-        return <Dashboard />;
+        return <Dashboard onNavigate={setCurrentPage} />;
     }
   };
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
@@ -38,8 +67,8 @@ function App() {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-800">FarmaControl</h1>
-              <p className="text-xs text-slate-500">Sistema de Inventario</p>
+              <h1 className="text-lg font-bold text-slate-800">Farmacia La Esperanza</h1>
+              <p className="text-xs text-slate-500">Sistema de Control</p>
             </div>
           </div>
         </div>
@@ -110,19 +139,41 @@ function App() {
             </svg>
             <span className="font-medium">Reportes</span>
           </button>
+
+          {user.role === 'admin' && (
+            <button
+              onClick={() => setCurrentPage('usuarios')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentPage === 'usuarios'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span className="font-medium">Usuarios</span>
+            </button>
+          )}
         </nav>
 
-        {/* User Info */}
+        {/* User Info & Logout */}
         <div className="p-4 border-t border-slate-200/60">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 mb-2">
             <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-              CM
+              {user.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate">Carlos Munguia</p>
-              <p className="text-xs text-slate-500">Administrador</p>
+              <p className="text-sm font-medium text-slate-800 truncate">{user.name}</p>
+              <p className="text-xs text-slate-500 capitalize">{user.role}</p>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Cerrar Sesión
+          </button>
         </div>
       </aside>
 
