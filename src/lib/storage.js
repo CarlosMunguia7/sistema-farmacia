@@ -88,108 +88,11 @@ export const addSale = (sale) => {
 
 // ---------- Inicialización de datos ----------
 export const initializeSampleData = () => {
-    const products = getProducts();
-    if (products.length === 0) {
-        const sampleProducts = [
-            {
-                id: '1',
-                name: 'Paracetamol 500mg',
-                sku: 'MED-001',
-                category: 'Analgésicos',
-                price: 12.50,
-                stock: 150,
-                minStock: 20,
-                expiryDate: '2025-12-31',
-                supplier: 'Farmacéutica Nacional',
-                createdAt: new Date().toISOString(),
-            },
-            {
-                id: '2',
-                name: 'Ibuprofeno 400mg',
-                sku: 'MED-002',
-                category: 'Antiinflamatorios',
-                price: 18.75,
-                stock: 85,
-                minStock: 15,
-                expiryDate: '2025-10-15',
-                supplier: 'Farmacéutica Nacional',
-                createdAt: new Date().toISOString(),
-            },
-            {
-                id: '3',
-                name: 'Amoxicilina 500mg',
-                sku: 'MED-003',
-                category: 'Antibióticos',
-                price: 45.00,
-                stock: 60,
-                minStock: 10,
-                expiryDate: '2025-08-20',
-                supplier: 'Laboratorios del Centro',
-                createdAt: new Date().toISOString(),
-            },
-            {
-                id: '4',
-                name: 'Loratadina 10mg',
-                sku: 'MED-004',
-                category: 'Antihistamínicos',
-                price: 8.25,
-                stock: 200,
-                minStock: 30,
-                expiryDate: '2026-03-10',
-                supplier: 'Farmacéutica Nacional',
-                createdAt: new Date().toISOString(),
-            },
-            {
-                id: '5',
-                name: 'Omeprazol 20mg',
-                sku: 'MED-005',
-                category: 'Antiácidos',
-                price: 22.00,
-                stock: 5,
-                minStock: 15,
-                expiryDate: '2025-11-30',
-                supplier: 'Laboratorios del Centro',
-                createdAt: new Date().toISOString(),
-            },
-        ];
-        saveProducts(sampleProducts);
-    }
+    // Ya no generamos datos de prueba automáticamente
 };
 
 export const initializeSampleSales = () => {
-    const sales = getSales();
-    if (sales.length === 0) {
-        const now = new Date();
-        const sampleSales = [
-            {
-                id: '1',
-                items: [
-                    { name: 'Paracetamol 500mg', quantity: 2, price: 12.50 },
-                    { name: 'Ibuprofeno 400mg', quantity: 1, price: 18.75 }
-                ],
-                total: 43.75,
-                createdAt: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
-            },
-            {
-                id: '2',
-                items: [
-                    { name: 'Amoxicilina 500mg', quantity: 1, price: 45.00 },
-                ],
-                total: 45.00,
-                createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-            },
-            {
-                id: '3',
-                items: [
-                    { name: 'Loratadina 10mg', quantity: 3, price: 8.25 },
-                    { name: 'Omeprazol 20mg', quantity: 2, price: 22.00 }
-                ],
-                total: 68.75,
-                createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-            },
-        ];
-        saveSales(sampleSales);
-    }
+    // Ya no generamos ventas de prueba automáticamente
 };
 
 // ---------- Caja Diaria ----------
@@ -334,12 +237,16 @@ export const saveUsers = (users) => {
 
 export const initializeUsers = () => {
     const users = getUsers();
-    if (users.length === 0) {
+    // Verificar si existe el usuario administrador correcto
+    const adminExists = users.some(u => u.username === 'Lic. Yoseling Moreno');
+
+    if (!adminExists) {
+        // Si no existe, reiniciamos los usuarios (limpieza solicitada) para asegurar el acceso
         const defaultAdmin = {
             id: '1',
-            username: 'admin',
-            password: '123', // En producción idealmente se usaría hash
-            name: 'Administrador',
+            username: 'Lic. Yoseling Moreno',
+            password: '2306',
+            name: 'Lic. Yoseling Moreno',
             role: 'admin',
             createdAt: new Date().toISOString()
         };
@@ -420,7 +327,19 @@ export const restoreBackup = (jsonString) => {
 
 // ---------- Inicialización general ----------
 export const initializeApp = () => {
-    initializeSampleData();
-    initializeSampleSales();
+    // Realizar limpieza única para dejar el sistema en blanco (solo la primera vez)
+    const hasReset = localStorage.getItem('SYSTEM_RESET_COMPLETE');
+
+    if (!hasReset) {
+        localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
+        localStorage.removeItem(STORAGE_KEYS.SALES);
+        localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+        localStorage.removeItem(STORAGE_KEYS.CLIENTS);
+        localStorage.removeItem('farmacia_users');
+
+        localStorage.setItem('SYSTEM_RESET_COMPLETE', 'true');
+    }
+
+    // Asegurar que exista el usuario admin
     initializeUsers();
 };

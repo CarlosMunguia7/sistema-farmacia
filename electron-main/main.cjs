@@ -17,11 +17,12 @@ function createWindow() {
         autoHideMenuBar: true,
         backgroundColor: '#f8fafc',
         title: 'Farmacia La Esperanza',
+        icon: path.join(__dirname, '../public/logo.jpg')
     });
 
     if (isDev) {
         win.loadURL('http://localhost:5173');
-        win.webContents.openDevTools();
+        // win.webContents.openDevTools();
     } else {
         win.loadFile(path.join(__dirname, '../dist/index.html'));
     }

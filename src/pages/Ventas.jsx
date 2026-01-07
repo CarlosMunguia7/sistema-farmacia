@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Plus,
     Minus,
@@ -10,6 +10,7 @@ import {
     Users,
     CheckCircle
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { getProducts, addSale, getClients, addCreditSale, addClient } from '../lib/storage';
 import { formatCurrency } from '../lib/utils';
 import ClientModal from '../components/ClientModal';
@@ -25,6 +26,15 @@ export default function Ventas() {
     const [isCredit, setIsCredit] = useState(false);
     const [clientSearchTerm, setClientSearchTerm] = useState('');
     const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+
+    const searchInputRef = useRef(null);
+
+    // Focus search on mount
+    useEffect(() => {
+        if (searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, []);
 
     // Load products and clients on mount
     useEffect(() => {
@@ -55,8 +65,9 @@ export default function Ventas() {
                 if (product) {
                     addToCart(product);
                     setBarcodeBuffer('');
+                    toast.success(`Producto agregado: ${product.name}`);
                 } else {
-                    alert(`Producto con SKU "${barcodeBuffer}" no encontrado`);
+                    toast.error(`Producto con SKU "${barcodeBuffer}" no encontrado`);
                     setBarcodeBuffer('');
                 }
             }
@@ -73,14 +84,16 @@ export default function Ventas() {
         if (existingItem) {
             if (existingItem.quantity < product.stock) {
                 setCart(cart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
+                toast.success('Cantidad actualizada');
             } else {
-                alert('No hay suficiente stock disponible');
+                toast.error('No hay suficiente stock disponible');
             }
         } else {
             if (product.stock > 0) {
                 setCart([...cart, { ...product, quantity: 1 }]);
+                toast.success('Producto agregado al carrito');
             } else {
-                alert('Producto sin stock');
+                toast.error('Producto sin stock');
             }
         }
     };
@@ -92,12 +105,13 @@ export default function Ventas() {
         } else if (newQuantity <= product.stock) {
             setCart(cart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
         } else {
-            alert('No hay suficiente stock disponible');
+            toast.error('No hay suficiente stock disponible');
         }
     };
 
     const removeFromCart = (productId) => {
         setCart(cart.filter(item => item.id !== productId));
+        toast.info('Producto eliminado del carrito');
     };
 
     const calculateTotal = () => {
@@ -110,11 +124,12 @@ export default function Ventas() {
         setClientSearchTerm(newClient.name);
         setSelectedClient(newClient.id);
         setShowClientModal(false);
+        toast.success('Cliente registrado exitosamente');
     };
 
     const handleCheckout = () => {
         if (cart.length === 0) {
-            alert('El carrito está vacío');
+            toast.error('El carrito está vacío');
             return;
         }
 
@@ -129,7 +144,7 @@ export default function Ventas() {
                 const newBalance = currentBalance + total;
 
                 if (newBalance > creditLimit) {
-                    alert(`⛔ NO SE PUEDE PROCESAR LA VENTA\n\nEl cliente excedería su límite de crédito.\n\nSaldo actual: ${formatCurrency(currentBalance)}\nLímite: ${formatCurrency(creditLimit)}\nVenta actual: ${formatCurrency(total)}\n\nSaldo proyectado: ${formatCurrency(newBalance)}`);
+                    toast.error(`⛔ Límite de crédito excedido. Saldo proyectado: ${formatCurrency(newBalance)}`);
                     return;
                 }
             }
@@ -149,7 +164,7 @@ export default function Ventas() {
         setIsCredit(false);
         setSelectedClient('');
         setClientSearchTerm('');
-        alert('Venta registrada exitosamente');
+        toast.success('¡Venta registrada exitosamente!');
     };
 
     const filteredClients = clients.filter(c =>
@@ -244,6 +259,7 @@ export default function Ventas() {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                             <input
+                                ref={searchInputRef}
                                 type="text"
                                 placeholder="Buscar productos..."
                                 value={searchTerm}

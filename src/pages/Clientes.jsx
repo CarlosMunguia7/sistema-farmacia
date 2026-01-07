@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, DollarSign, CreditCard, Search } from 'lucide-react';
-import { getClients, addClient, updateClient, deleteClient, addPayment } from '../lib/storage';
+import { getClients, deleteClient, addPayment } from '../lib/storage';
 import { formatCurrency } from '../lib/utils';
+import ClientModal from '../components/ClientModal';
 
 export default function Clientes() {
     const [clients, setClients] = useState([]);
@@ -9,12 +10,6 @@ export default function Clientes() {
     const [showModal, setShowModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedClient, setSelectedClient] = useState(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        phone: '',
-        address: '',
-        creditLimit: ''
-    });
     const [paymentAmount, setPaymentAmount] = useState('');
 
     useEffect(() => {
@@ -30,36 +25,19 @@ export default function Clientes() {
         client.phone.includes(searchTerm)
     );
 
-    const handleSave = () => {
-        if (!formData.name || !formData.phone) {
-            alert('Por favor completa nombre y teléfono');
-            return;
-        }
-
-        const clientData = {
-            ...formData,
-            creditLimit: parseFloat(formData.creditLimit) || 0
-        };
-
-        if (selectedClient) {
-            updateClient(selectedClient.id, clientData);
-        } else {
-            addClient(clientData);
-        }
-
-        loadClients();
-        handleCloseModal();
+    const handleCreate = () => {
+        setSelectedClient(null);
+        setShowModal(true);
     };
 
     const handleEdit = (client) => {
         setSelectedClient(client);
-        setFormData({
-            name: client.name,
-            phone: client.phone,
-            address: client.address || '',
-            creditLimit: client.creditLimit || ''
-        });
         setShowModal(true);
+    };
+
+    const handleSave = () => {
+        loadClients();
+        setShowModal(false);
     };
 
     const handleDelete = (id) => {
@@ -92,12 +70,6 @@ export default function Clientes() {
         setShowPaymentModal(false);
     };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-        setSelectedClient(null);
-        setFormData({ name: '', phone: '', address: '', creditLimit: '' });
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -106,8 +78,8 @@ export default function Clientes() {
                     <p className="text-slate-500 mt-1">Gestión de clientes y créditos</p>
                 </div>
                 <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                    onClick={handleCreate}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
                 >
                     <Plus className="w-5 h-5" />
                     Agregar Cliente
@@ -189,73 +161,15 @@ export default function Clientes() {
                 </div>
             </div>
 
-            {/* Modal Agregar/Editar */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                            <h3 className="text-xl font-bold text-white">
-                                {selectedClient ? 'Editar Cliente' : 'Nuevo Cliente'}
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Nombre *</label>
-                                <input
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Teléfono *</label>
-                                <input
-                                    type="tel"
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Dirección</label>
-                                <input
-                                    type="text"
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Límite de Crédito (C$)</label>
-                                <input
-                                    type="number"
-                                    value={formData.creditLimit}
-                                    onChange={(e) => setFormData({ ...formData, creditLimit: e.target.value })}
-                                    step="0.01"
-                                    className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    onClick={handleSave}
-                                    className="flex-1 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
-                                >
-                                    Guardar
-                                </button>
-                                <button
-                                    onClick={handleCloseModal}
-                                    className="flex-1 py-2 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300 transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Modal Agregar/Editar Cliente */}
+            <ClientModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSave={handleSave}
+                client={selectedClient}
+            />
 
-            {/* Modal Pago */}
+            {/* Modal Pago (mantenemos este inline por simplicidad por ahora) */}
             {showPaymentModal && selectedClient && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
@@ -277,6 +191,7 @@ export default function Clientes() {
                                     step="0.01"
                                     className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-green-500"
                                     placeholder="0.00"
+                                    autoFocus
                                 />
                             </div>
                             <div className="flex gap-3">

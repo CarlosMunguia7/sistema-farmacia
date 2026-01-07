@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, Wallet, Database } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
+import logo from './assets/logo.jpg';
 import Dashboard from './pages/Dashboard';
 import Inventario from './pages/Inventario';
 import Reportes from './pages/Reportes';
@@ -7,6 +9,8 @@ import Ventas from './pages/Ventas';
 import Clientes from './pages/Clientes';
 import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
+import Caja from './pages/Caja';
+import Respaldos from './pages/Respaldos';
 import { initializeApp } from './lib/storage';
 
 function App() {
@@ -18,6 +22,18 @@ function App() {
     // Check for existing session (optional, for now we require login on refresh for security)
     // const savedUser = localStorage.getItem('farmacia_session');
     // if (savedUser) setUser(JSON.parse(savedUser));
+
+    // Global Keyboard Shortcuts
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        setCurrentPage('ventas');
+        toast.info('Accediendo al Punto de Venta...');
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
   const handleLogin = (userData) => {
@@ -43,8 +59,12 @@ function App() {
         return <Clientes />;
       case 'reportes':
         return <Reportes />;
+      case 'caja':
+        return <Caja />;
       case 'usuarios':
         return <Usuarios />;
+      case 'respaldos':
+        return <Respaldos />;
       default:
         return <Dashboard onNavigate={setCurrentPage} />;
     }
@@ -56,15 +76,14 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+      <Toaster position="top-center" richColors />
       {/* Sidebar */}
       <aside className="w-64 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-xl flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-slate-200/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+              <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-slate-800">Farmacia La Esperanza</h1>
@@ -74,7 +93,7 @@ function App() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <button
             onClick={() => setCurrentPage('dashboard')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentPage === 'dashboard'
@@ -140,19 +159,43 @@ function App() {
             <span className="font-medium">Reportes</span>
           </button>
 
+          <button
+            onClick={() => setCurrentPage('caja')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentPage === 'caja'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+          >
+            <Wallet className="w-5 h-5" />
+            <span className="font-medium">Caja Diaria</span>
+          </button>
+
           {user.role === 'admin' && (
-            <button
-              onClick={() => setCurrentPage('usuarios')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentPage === 'usuarios'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span className="font-medium">Usuarios</span>
-            </button>
+            <>
+              <button
+                onClick={() => setCurrentPage('usuarios')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentPage === 'usuarios'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span className="font-medium">Usuarios</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentPage('respaldos')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentPage === 'respaldos'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+              >
+                <Database className="w-5 h-5" />
+                <span className="font-medium">Respaldos</span>
+              </button>
+            </>
           )}
         </nav>
 

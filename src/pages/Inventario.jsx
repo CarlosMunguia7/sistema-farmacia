@@ -179,8 +179,8 @@ export default function Inventario() {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{product.category}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${product.stock <= product.minStock
-                                                ? 'bg-red-100 text-red-700'
-                                                : 'bg-green-100 text-green-700'
+                                            ? 'bg-red-100 text-red-700'
+                                            : 'bg-green-100 text-green-700'
                                             }`}>
                                             {product.stock}
                                         </span>

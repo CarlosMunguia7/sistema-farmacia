@@ -8,6 +8,7 @@ import {
     Pill
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import logo from '../assets/logo.jpg';
 
 const navigation = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
@@ -27,8 +28,8 @@ export default function Layout({ children }) {
                 {/* Logo */}
                 <div className="p-6 border-b border-slate-200/60">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                            <Pill className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
                             <h1 className="text-lg font-bold text-slate-800">FarmaControl</h1>
