@@ -27,6 +27,21 @@ export const addProduct = (product) => {
     };
     products.push(newProduct);
     saveProducts(products);
+
+    // Log initial entry
+    if (newProduct.stock > 0) {
+        logInventoryMovement({
+            productId: newProduct.id,
+            productName: newProduct.name,
+            sku: newProduct.sku,
+            type: 'ENTRADA',
+            quantity: newProduct.stock,
+            previousStock: 0,
+            newStock: newProduct.stock,
+            reason: 'Creación de producto',
+        });
+    }
+
     return newProduct;
 };
 
@@ -34,6 +49,25 @@ export const updateProduct = (id, updatedData) => {
     const products = getProducts();
     const index = products.findIndex(p => p.id === id);
     if (index !== -1) {
+        const oldProduct = products[index];
+        const newStock = updatedData.stock !== undefined ? parseInt(updatedData.stock) : oldProduct.stock;
+
+        // Calculate diff
+        const stockDiff = newStock - oldProduct.stock;
+
+        if (stockDiff !== 0) {
+            logInventoryMovement({
+                productId: oldProduct.id,
+                productName: oldProduct.name,
+                sku: oldProduct.sku,
+                type: stockDiff > 0 ? 'AJUSTE (+)' : 'AJUSTE (-)',
+                quantity: Math.abs(stockDiff),
+                previousStock: oldProduct.stock,
+                newStock: newStock,
+                reason: 'Actualización manual / Edición',
+            });
+        }
+
         products[index] = { ...products[index], ...updatedData, updatedAt: new Date().toISOString() };
         saveProducts(products);
         return products[index];
@@ -43,6 +77,19 @@ export const updateProduct = (id, updatedData) => {
 
 export const deleteProduct = (id) => {
     const products = getProducts();
+    const productToDelete = products.find(p => p.id === id);
+    if (productToDelete) {
+        logInventoryMovement({
+            productId: id,
+            productName: productToDelete.name,
+            sku: productToDelete.sku,
+            type: 'SALIDA',
+            quantity: productToDelete.stock,
+            previousStock: productToDelete.stock,
+            newStock: 0,
+            reason: 'Eliminación de producto',
+        });
+    }
     const filtered = products.filter(p => p.id !== id);
     saveProducts(filtered);
     return filtered;
@@ -73,17 +120,67 @@ export const addSale = (sale) => {
     sales.push(newSale);
     saveSales(sales);
 
-    // ---- Descontar stock ----
+    // ---- Descontar stock y registrar movimiento ----
     const products = getProducts();
     newSale.items.forEach(item => {
-        const prod = products.find(p => p.name === item.name);
+        const prod = products.find(p => p.sku === item.sku || p.name === item.name); // Try looser match
         if (prod) {
-            prod.stock = Math.max(0, (prod.stock || 0) - item.quantity);
+            const previousStock = prod.stock || 0;
+            prod.stock = Math.max(0, previousStock - item.quantity);
+
+            // Log movement
+            logInventoryMovement({
+                productId: prod.id,
+                productName: prod.name,
+                sku: prod.sku,
+                type: 'SALIDA',
+                quantity: item.quantity,
+                previousStock: previousStock,
+                newStock: prod.stock,
+                reason: `Venta #${newSale.id.slice(-6)}`,
+                referenceId: newSale.id
+            });
         }
     });
     saveProducts(products);
 
     return newSale;
+};
+
+// ---------- Historial de Movimientos (Kardex) ----------
+export const getMovements = () => {
+    const data = localStorage.getItem('farmacia_movements');
+    return data ? JSON.parse(data) : [];
+};
+
+export const saveMovements = (movements) => {
+    localStorage.setItem('farmacia_movements', JSON.stringify(movements));
+};
+
+export const logInventoryMovement = ({ productId, productName, sku, type, quantity, previousStock, newStock, reason, referenceId }) => {
+    const movements = getMovements();
+    const newMovement = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        productId,
+        productName,
+        sku,
+        type, // 'ENTRADA', 'SALIDA', 'AJUSTE'
+        quantity,
+        previousStock,
+        newStock,
+        reason,
+        referenceId,
+        date: new Date().toISOString()
+    };
+    movements.unshift(newMovement); // Add to beginning
+    // Optional: Keep only last 1000 movements to save space if needed, but for localstorage 5MB is plenty for text.
+    saveMovements(movements);
+    return newMovement;
+};
+
+export const getProductMovements = (productId) => {
+    const movements = getMovements();
+    return movements.filter(m => m.productId === productId);
 };
 
 // ---------- Inicialización de datos ----------
@@ -327,17 +424,20 @@ export const restoreBackup = (jsonString) => {
 
 // ---------- Inicialización general ----------
 export const initializeApp = () => {
-    // Realizar limpieza única para dejar el sistema en blanco (solo la primera vez)
-    const hasReset = localStorage.getItem('SYSTEM_RESET_COMPLETE');
+    // Realizar limpieza única para dejar el sistema en blanco (solo la primera vez o tras actualización)
+    // Cambiamos la key para forzar un reset en esta nueva versión "empaquetada"
+    const hasReset = localStorage.getItem('SYSTEM_INITIALIZED_V1');
 
     if (!hasReset) {
+        // Limpiar todas las claves principales
         localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
         localStorage.removeItem(STORAGE_KEYS.SALES);
         localStorage.removeItem(STORAGE_KEYS.SETTINGS);
         localStorage.removeItem(STORAGE_KEYS.CLIENTS);
         localStorage.removeItem('farmacia_users');
+        localStorage.removeItem('farmacia_movements'); // Limpiar historial también
 
-        localStorage.setItem('SYSTEM_RESET_COMPLETE', 'true');
+        localStorage.setItem('SYSTEM_INITIALIZED_V1', 'true');
     }
 
     // Asegurar que exista el usuario admin

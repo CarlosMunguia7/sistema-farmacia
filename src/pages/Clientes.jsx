@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, DollarSign, CreditCard, Search } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 import { getClients, deleteClient, addPayment } from '../lib/storage';
 import { formatCurrency } from '../lib/utils';
 import ClientModal from '../components/ClientModal';
@@ -38,12 +39,14 @@ export default function Clientes() {
     const handleSave = () => {
         loadClients();
         setShowModal(false);
+        toast.success(selectedClient ? 'Cliente actualizado correctamente' : 'Cliente creado exitosamente');
     };
 
     const handleDelete = (id) => {
         if (confirm('¿Eliminar este cliente?')) {
             deleteClient(id);
             loadClients();
+            toast.success('Cliente eliminado correctamente');
         }
     };
 
@@ -56,18 +59,19 @@ export default function Clientes() {
     const handleAddPayment = () => {
         const amount = parseFloat(paymentAmount);
         if (isNaN(amount) || amount <= 0) {
-            alert('Ingresa un monto válido');
+            toast.error('Ingresa un monto válido');
             return;
         }
 
         if (amount > selectedClient.balance) {
-            alert('El pago no puede ser mayor al saldo');
+            toast.error('El pago no puede ser mayor al saldo');
             return;
         }
 
         addPayment(selectedClient.id, { amount, description: 'Pago' });
         loadClients();
         setShowPaymentModal(false);
+        toast.success('Pago registrado correctamente');
     };
 
     return (

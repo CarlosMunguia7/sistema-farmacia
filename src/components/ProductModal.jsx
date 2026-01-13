@@ -11,6 +11,8 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
         minStock: '',
         expiryDate: '',
         supplier: '',
+        manufacturer: '',
+        batchNumber: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -27,6 +29,8 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
                 minStock: product.minStock || '',
                 expiryDate: product.expiryDate || '',
                 supplier: product.supplier || '',
+                manufacturer: product.manufacturer || '',
+                batchNumber: product.batchNumber || ''
             });
         } else {
             // Modo crear - limpiar formulario
@@ -39,6 +43,8 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
                 minStock: '',
                 expiryDate: '',
                 supplier: '',
+                manufacturer: '',
+                batchNumber: ''
             });
         }
         setErrors({});
@@ -63,7 +69,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
         const newErrors = {};
 
         if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
-        if (!formData.sku.trim()) newErrors.sku = 'El SKU es requerido';
+        // SKU removed from validation
         if (!formData.category.trim()) newErrors.category = 'La categoría es requerida';
         if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'El precio debe ser mayor a 0';
         if (!formData.stock || parseInt(formData.stock) < 0) newErrors.stock = 'El stock debe ser 0 o mayor';
@@ -111,13 +117,12 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Nombre */}
+                        {/* 1. Insumo (Nombre) */}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Nombre del Producto *
+                                Insumo (Nombre del Producto) *
                             </label>
                             <input
                                 type="text"
@@ -131,48 +136,56 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
                             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                         </div>
 
-                        {/* SKU */}
+                        {/* 2. Lote */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                SKU *
+                                Lote
                             </label>
                             <input
                                 type="text"
-                                name="sku"
-                                value={formData.sku}
+                                name="batchNumber"
+                                value={formData.batchNumber || ''}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.sku ? 'border-red-500' : 'border-slate-300'
-                                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                placeholder="Ej: MED-001"
+                                className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Ej: L-2023001"
                             />
-                            {errors.sku && <p className="text-red-500 text-sm mt-1">{errors.sku}</p>}
                         </div>
 
-                        {/* Categoría */}
+                        {/* 3. Fecha de Vencimiento */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Categoría *
+                                Fecha de Vencimiento *
                             </label>
-                            <select
-                                name="category"
-                                value={formData.category}
+                            <input
+                                type="date"
+                                name="expiryDate"
+                                value={formData.expiryDate}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.category ? 'border-red-500' : 'border-slate-300'
+                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.expiryDate ? 'border-red-500' : 'border-slate-300'
                                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                            >
-                                <option value="">Seleccionar categoría</option>
-                                <option value="Analgésicos">Analgésicos</option>
-                                <option value="Antibióticos">Antibióticos</option>
-                                <option value="Antiinflamatorios">Antiinflamatorios</option>
-                                <option value="Antihistamínicos">Antihistamínicos</option>
-                                <option value="Antiácidos">Antiácidos</option>
-                                <option value="Vitaminas">Vitaminas</option>
-                                <option value="Otros">Otros</option>
-                            </select>
-                            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+                            />
+                            {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
                         </div>
 
-                        {/* Precio */}
+                        {/* 4. Cantidad (Stock) */}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Cantidad (Stock Actual) *
+                            </label>
+                            <input
+                                type="number"
+                                name="stock"
+                                value={formData.stock}
+                                onChange={handleChange}
+                                min="0"
+                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.stock ? 'border-red-500' : 'border-slate-300'
+                                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                placeholder="0"
+                            />
+                            {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
+                        </div>
+
+                        {/* 5. Precio */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
                                 Precio (C$) *
@@ -191,28 +204,42 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
                             {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                         </div>
 
-                        {/* Stock */}
+                        {/* 6. Laboratorio */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Stock Actual *
+                                Laboratorio (Fabricante)
                             </label>
                             <input
-                                type="number"
-                                name="stock"
-                                value={formData.stock}
+                                type="text"
+                                name="manufacturer"
+                                value={formData.manufacturer || ''}
                                 onChange={handleChange}
-                                min="0"
-                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.stock ? 'border-red-500' : 'border-slate-300'
-                                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                placeholder="0"
+                                className="w-full px-4 py-2 bg-white text-slate-900 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Ej: MK, Bayer..."
                             />
-                            {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
                         </div>
 
-                        {/* Stock Mínimo */}
+                        {/* 7. Distribuidora (Proveedor) */}
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Distribuidora (Proveedor) *
+                            </label>
+                            <input
+                                type="text"
+                                name="supplier"
+                                value={formData.supplier}
+                                onChange={handleChange}
+                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.supplier ? 'border-red-500' : 'border-slate-300'
+                                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                placeholder="Ej: Distribuidora Central"
+                            />
+                            {errors.supplier && <p className="text-red-500 text-sm mt-1">{errors.supplier}</p>}
+                        </div>
+
+                        {/* 8. Stock Mínimo */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Stock Mínimo *
+                                Stock Mínimo (Alerta) *
                             </label>
                             <input
                                 type="number"
@@ -227,37 +254,27 @@ export default function ProductModal({ isOpen, onClose, onSave, product = null }
                             {errors.minStock && <p className="text-red-500 text-sm mt-1">{errors.minStock}</p>}
                         </div>
 
-                        {/* Fecha de Vencimiento */}
+                        {/* 9. Categoría (Auxiliary) */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Fecha de Vencimiento *
+                                Categoría *
                             </label>
-                            <input
-                                type="date"
-                                name="expiryDate"
-                                value={formData.expiryDate}
+                            <select
+                                name="category"
+                                value={formData.category}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.expiryDate ? 'border-red-500' : 'border-slate-300'
+                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.category ? 'border-red-500' : 'border-slate-300'
                                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                            />
-                            {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
-                        </div>
-
-                        {/* Proveedor */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Proveedor *
-                            </label>
-                            <input
-                                type="text"
-                                name="supplier"
-                                value={formData.supplier}
-                                onChange={handleChange}
-                                className={`w-full px-4 py-2 bg-white text-slate-900 rounded-lg border ${errors.supplier ? 'border-red-500' : 'border-slate-300'
-                                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                placeholder="Ej: Farmacéutica Nacional"
-                            />
-                            {errors.supplier && <p className="text-red-500 text-sm mt-1">{errors.supplier}</p>}
+                            >
+                                <option value="">Seleccionar categoría</option>
+                                <option value="Insumo">Insumo</option>
+                                <option value="Medicamento">Medicamento</option>
+                                <option value="Equipo">Equipo</option>
+                                <option value="Analgésicos">Analgésicos</option>
+                                <option value="Antibióticos">Antibióticos</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
                         </div>
                     </div>
 
